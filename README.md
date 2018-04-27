@@ -3,4 +3,7 @@
 
 # conp-pipeline
 
-Pipeline management tool for the CONP
+`conp-pipeline` is a tool that runs pipelines and commit their inputs and 
+results to aDataLad dataset.
+
+Syntax: `conp-pipeline <dataset> <descriptor> <invocation>` 

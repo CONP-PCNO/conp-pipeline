@@ -125,7 +125,9 @@ def main(args=None):
         task_dir = clowdr_exec(descriptor_file,
                                invocation_file,
                                execution_dir,
-                               execution_dir)
+                               execution_dir,
+                               volumes=[op.abspath(dataset_path) +
+                                        ":" + op.abspath(dataset_path)])
         os.chdir(cwd)
 
         # Copy Clowdr files back
