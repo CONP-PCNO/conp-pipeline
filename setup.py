@@ -3,7 +3,7 @@ from setuptools import setup
 import sys
 
 VERSION = "0.1"
-DEPS = ["clowdr", "datalad"]
+DEPS = ["clowdr"]
 
 setup(name="conp-pipeline",
       version=VERSION,

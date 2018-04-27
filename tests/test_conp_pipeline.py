@@ -5,6 +5,7 @@ import shutil
 import os
 import subprocess
 
+
 class TestImport(TestCase):
 
     def test_conp_pipeline(self):
@@ -29,4 +30,3 @@ class TestImport(TestCase):
         print(process.stdout)
         print(process.stderr)
         self.assertFalse(process.returncode)
-        
