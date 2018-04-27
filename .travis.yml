@@ -1,0 +1,39 @@
+dist: trusty
+sudo: required
+language: python
+
+services:
+- docker
+
+python:
+- 3.4
+- 3.5
+- 3.5-dev
+- 3.6
+- 3.6-dev
+- 3.7-dev
+- nightly
+
+before_install:
+- sudo apt-get update -qq
+- bash <(wget -q -O- http://neuro.debian.net/_files/neurodebian-travis.sh)
+- sudo apt-get update
+- sudo apt-get install -y -qq python dh-autoreconf squashfs-tools build-essential git-annex-standalone
+- cd ${TRAVIS_BUILD_DIR}
+
+install:
+- pip install --upgrade setuptools
+- pip install coveralls pytest pytest-runner pycodestyle
+- pip install .
+- git clone https://github.com/datalad/datalad.git
+- pip install ./datalad
+- rm datalad -Rf
+
+script:
+- pycodestyle --max-line-length=80 *.py tests/*.py
+- coverage run --source conp-pipeline setup.py pytest
+
+after_success:
+- coveralls
+
+deploy:
