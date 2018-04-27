@@ -7,3 +7,10 @@
 results to aDataLad dataset.
 
 Syntax: `conp-pipeline <dataset> <descriptor> <invocation>` 
+
+Example: the following commands create a test DataLad dataset, 
+run FSL bet on a test image and commit the results to the dataset.
+```
+datalad create test-dataset
+conp-pipeline test-dataset tests/fsl_bet.json tests/invocation.json
+```
