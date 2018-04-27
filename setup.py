@@ -3,9 +3,7 @@ from setuptools import setup
 import sys
 
 VERSION = "0.1"
-DEPS = [
-         "datalad"
-       ]
+DEPS = []
 
 setup(name="conp-pipeline",
       version=VERSION,
@@ -35,9 +33,9 @@ setup(name="conp-pipeline",
       tests_require=["pytest"],
       setup_requires=DEPS,
       install_requires=DEPS,
-      entry_points=  {
+      entry_points={
         "console_scripts": [
-            "conp-pipeline=conp-pipeline.main:main",
+            "conp-pipeline=main:main",
         ]
       },
       zip_safe=False)
