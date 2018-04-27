@@ -79,7 +79,11 @@ def main(args=None):
         bosh_invocation(descriptor_file, "-i", invocation_file)
 
         # Create execution directory
-        execution_dir = mkdtemp(dir=dataset_path, prefix='execution-')
+        execution_dir = op.abspath(op.join(dataset_path, 'execution'))
+        if op.exists(execution_dir):
+            execution_dir = mkdtemp(dir=dataset_path, prefix='execution-')
+        else:
+            os.mkdir(execution_dir)
         info("Execution dir: {}".format(execution_dir), verbose)
 
         # Add descriptor to execution dir

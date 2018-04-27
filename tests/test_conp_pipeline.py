@@ -30,3 +30,6 @@ class TestImport(TestCase):
         print(process.stderr.read())
         process.communicate()
         self.assertFalse(process.returncode)
+
+        self.assertTrue(os.path.exists('test_dataset/execution/'
+                                       'sub-01_T1w_brain.nii.gz'))
