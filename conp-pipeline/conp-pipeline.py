@@ -71,7 +71,7 @@ def main(args=None):
         # Check if dataset is a DataLad dataset
         dataset = Dataset(dataset_path)
         if not dataset.is_installed():
-            raise CONPPipelineError("{} is not a DataLad"
+            raise CONPPipelineError("{} is not an installed DataLad"
                                     " dataset".format(dataset_path))
 
         # Validate descriptor and invocation files
@@ -94,6 +94,7 @@ def main(args=None):
                                     invocation_file,
                                     "inputs/type=File")
 
+        info("Copying input files to dataset", verbose)
         for input_id in bosh_inputs.keys():
             input_file = bosh_inputs[input_id]
             if input_file is None:
@@ -121,16 +122,14 @@ def main(args=None):
         else:
             from clowdr.driver import local as clowdr_exec
         cwd = os.getcwd()
-        (bosh_output, task_dir) = clowdr_exec(descriptor_file,
-                                              invocation_file,
-                                              execution_dir,
-                                              execution_dir)
+        task_dir = clowdr_exec(descriptor_file,
+                               invocation_file,
+                               execution_dir,
+                               execution_dir)
         os.chdir(cwd)
-        if(verbose):
-            print(bosh_output)
 
         # Copy Clowdr files back
-        info("Copying execution files to dataset", verbose)
+        info("Copying output files to dataset", verbose)
         ignored_files = ['invocation.json', task_dir]
         for file_name in os.listdir(task_dir):
             file_name = op.join(task_dir, file_name)
