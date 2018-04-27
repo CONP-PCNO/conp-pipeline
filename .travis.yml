@@ -18,7 +18,8 @@ python:
 
 before_install:
 - sudo apt-get update -qq
-- bash <(wget -q -O- http://neuro.debian.net/_files/neurodebian-travis.sh)
+- sudo bash <(wget -q -O- http://neuro.debian.net/_files/neurodebian-travis.sh)
+- sudo apt-get update
 - sudo apt-get install -y -qq python dh-autoreconf squashfs-tools build-essential git-annex
 - cd ${TRAVIS_BUILD_DIR}
 
