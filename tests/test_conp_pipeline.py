@@ -21,7 +21,7 @@ class TestImport(TestCase):
         process.communicate()
         self.assertFalse(process.returncode)
 
-        command = ("conp-pipeline test_dataset tests/fsl_bet.json "
+        command = ("conp-pipeline run test_dataset tests/fsl_bet.json "
                    "tests/invocation.json")
         process = subprocess.Popen(command, shell=True,
                                    stdout=subprocess.PIPE,

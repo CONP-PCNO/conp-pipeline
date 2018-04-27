@@ -48,6 +48,9 @@ def to_git_guess(file_name):
 def main(args=None):
 
     parser = argparse.ArgumentParser(description="CONP pipeline driver")
+    parser.add_argument("command", action="store",
+                        help="command to be executed.",
+                        choices=["run"])
     parser.add_argument("dataset_path", action="store",
                         help="path to a datalad dataset.")
     parser.add_argument("descriptor_file", action="store",
