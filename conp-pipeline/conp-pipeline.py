@@ -115,19 +115,22 @@ def main(args=None):
             fhandle.write(json.dumps(invocation, indent=4, sort_keys=True))
 
         # Run the execution in Clowdr
-        info("Attempting execution with Clowdr", verbose)
+        info("Executing invocation with Clowdr", verbose)
         if slurm:
             from clowdr.driver import cluster as clowdr_exec
         else:
             from clowdr.driver import local as clowdr_exec
         cwd = os.getcwd()
-        task_dir = clowdr_exec(descriptor_file,
-                               invocation_file,
-                               execution_dir,
-                               execution_dir)
+        (bosh_output, task_dir) = clowdr_exec(descriptor_file,
+                                              invocation_file,
+                                              execution_dir,
+                                              execution_dir)
         os.chdir(cwd)
+        if(verbose):
+            print(bosh_output)
 
         # Copy Clowdr files back
+        info("Copying execution files to dataset", verbose)
         ignored_files = ['invocation.json', task_dir]
         for file_name in os.listdir(task_dir):
             file_name = op.join(task_dir, file_name)
@@ -140,6 +143,7 @@ def main(args=None):
         # Cleanup Clowdr dir
         shutil.rmtree(op.dirname(task_dir))
 
+        info("Done!", verbose)
 # Add metadadta to descriptor so that others can find it (how?)
 
 # Copy output files to dataset if not there already.
