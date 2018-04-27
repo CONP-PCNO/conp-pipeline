@@ -127,7 +127,8 @@ def main(args=None):
                                execution_dir,
                                execution_dir,
                                volumes=[op.abspath(dataset_path) +
-                                        ":" + op.abspath(dataset_path)])
+                                        ":" + op.abspath(dataset_path)],
+                               user=True)
         os.chdir(cwd)
 
         # Copy Clowdr files back
