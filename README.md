@@ -6,9 +6,13 @@
 `conp-pipeline` is a tool that runs pipelines and commit their inputs and 
 results to aDataLad dataset.
 
-Syntax: `conp-pipeline <dataset> <descriptor> <invocation>` 
+## Syntax
 
-Example: the following commands create a test DataLad dataset, 
+`conp-pipeline <dataset> <descriptor> <invocation>` 
+
+## Example
+
+The following commands create a test DataLad dataset, 
 run FSL bet on a test image and commit the results to the dataset.
 ```
 datalad create test-dataset
