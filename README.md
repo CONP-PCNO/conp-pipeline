@@ -8,6 +8,10 @@
 `conp-pipeline` is a tool that runs pipelines and commit their inputs and 
 results to aDataLad dataset.
 
+## Installation
+
+`pip install conp-pipeline`
+
 ## Syntax
 
 `conp-pipeline <dataset> <descriptor> <invocation>` 
