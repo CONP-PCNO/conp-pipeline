@@ -10,7 +10,8 @@ results to a DataLad dataset.
 
 ## Installation
 
-`pip install conp-pipeline`
+* Install [`git-annex`](http://git-annex.branchable.com/install)
+* `pip install conp-pipeline`
 
 ## Syntax
 
