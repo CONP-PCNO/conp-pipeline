@@ -26,6 +26,8 @@ install:
 - pip install --upgrade setuptools
 - pip install coveralls pytest pytest-runner pycodestyle
 - pip install .
+- git clone https://github.com/datalad/datalad.git
+- pip install datalad
 
 script:
 - pycodestyle --max-line-length=80 *.py tests/*.py

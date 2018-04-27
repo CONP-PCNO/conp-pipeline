@@ -49,15 +49,15 @@ def main(args=None):
 
     parser = argparse.ArgumentParser(description="CONP pipeline driver")
     parser.add_argument("dataset_path", action="store",
-                        help="Path to a datalad dataset.")
+                        help="path to a datalad dataset.")
     parser.add_argument("descriptor_file", action="store",
-                        help="The Boutiques descriptor.")
+                        help="the Boutiques descriptor.")
     parser.add_argument("invocation_file", action="store",
-                        help="Input JSON complying to invocation.")
+                        help="input JSON complying to invocation.")
     parser.add_argument("--slurm", action="store_true",
-                        help="Run on SLURM cluster.")
+                        help="run on SLURM cluster.")
     parser.add_argument("-v", "--verbose", action="store_true",
-                        help="Increase verbosity.")
+                        help="increase verbosity.")
     results = parser.parse_args(args)
 
     # Parse arguments
