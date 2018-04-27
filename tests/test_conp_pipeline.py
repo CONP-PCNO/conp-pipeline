@@ -16,6 +16,8 @@ class TestImport(TestCase):
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE)
         process.communicate()
+        print(process.stdout)
+        print(process.stderr)
         self.assertFalse(process.returncode)
 
         command = ("conp-pipeline test_dataset tests/fsl_bet.json "
@@ -24,5 +26,7 @@ class TestImport(TestCase):
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE)
         process.communicate()
+        print(process.stdout)
+        print(process.stderr)
         self.assertFalse(process.returncode)
         
