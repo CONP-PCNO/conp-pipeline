@@ -3,7 +3,7 @@ from setuptools import setup
 import sys
 
 VERSION = "0.1"
-DEPS = [ "clowdr", "datalad" ]
+DEPS = ["clowdr", "datalad"]
 
 setup(name="conp-pipeline",
       version=VERSION,
@@ -27,7 +27,7 @@ setup(name="conp-pipeline",
                 "Natural Language :: English"
                   ],
       license="MIT",
-      packages=["conp-pipeline"],
+      packages=["conp_pipeline"],
       include_package_data=True,
       test_suite="pytest",
       tests_require=["pytest"],
@@ -35,7 +35,7 @@ setup(name="conp-pipeline",
       install_requires=DEPS,
       entry_points={
         "console_scripts": [
-            "conp-pipeline=main:main",
+            "conp-pipeline=conp_pipeline:conpDriver",
         ]
       },
       zip_safe=False)
