@@ -5,7 +5,7 @@
 
 # conp-pipeline
 
-`conp-pipeline` is a tool that runs pipelines and commit their inputs and 
+`conp-pipeline` is a tool that runs pipelines and commits their inputs and 
 results to a DataLad dataset.
 
 ## Installation
