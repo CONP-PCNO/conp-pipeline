@@ -11,6 +11,7 @@ results to a DataLad dataset.
 ## Installation
 
 * Install [`git-annex`](http://git-annex.branchable.com/install)
+* `pip install git+https://github.com/datalad/datalad.git`
 * `pip install conp-pipeline`
 
 ## Syntax
