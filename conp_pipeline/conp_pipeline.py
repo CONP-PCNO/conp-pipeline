@@ -14,6 +14,7 @@ from boutiques import validate as bosh_validate
 from boutiques import invocation as bosh_invocation
 from datalad.distribution.dataset import Dataset
 from datalad.distribution.add import Add
+from datalad.metadata.aggregate import AggregateMetaData
 
 
 class CONPPipelineError(Exception):
@@ -47,35 +48,6 @@ def to_git_guess(file_name):
     # return file_name.endswith('.json') or file_name.endswith('.txt')
     # Looks like a file must be in the annex to have metadata
     return False
-
-
-def add_metadata(file_name, properties):
-    # properties is a dict of metadata properties
-    dic = {}
-    dic['file'] = file_name
-    dic['fields'] = properties
-    json_string = json.dumps(dic).encode()
-    with chpwd(op.dirname(file_name)):
-        command = "git annex metadata --batch --json"
-        process = subprocess.run(command,
-                                 check=True,
-                                 stdout=subprocess.PIPE,
-                                 stderr=subprocess.PIPE,
-                                 input=json_string)
-
-def aggregate_metadata(dataset_path):
-    # We should probably do this through the Python API
-    command = "datalad aggregate-metadata -d {}".format(dataset_path)
-    process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE,
-                               stderr=subprocess.PIPE)
-    code = process.wait()
-    stdout = process.stdout.read().decode("utf-8")
-    stderr = process.stderr.read().decode("utf-8")
-    if code:
-        raise CONPPipelineError("Cannot add metadata ({} {}) to file"
-                                " {}: {}\n {}".format(key, value,
-                                                      file_name, stdout,
-                                                      stderr))
 
 
 def main(args=None):
@@ -129,22 +101,24 @@ def main(args=None):
 
         # Add metadata to descriptor
         descriptor = json.loads(open(descriptor_file).read())
-        metadata_descriptor = {}
-        metadata_descriptor['conp-pipeline-role'] = ['pipeline-description']
-        metadata_descriptor['pipeline-format'] = ['boutiques']
+        descriptor_properties = {}
+        descriptor_properties['conp-pipeline-role'] = ['pipeline-description']
+        descriptor_properties['pipeline-format'] = ['boutiques']
         for field in ['name', 'description', 'tool-version', 'author',
                       'url', 'doi', 'tool-doi']:
             if descriptor.get(field):
-                metadata_descriptor[field] = [descriptor[field]]
+                descriptor_properties[field] = [descriptor[field]]
         if descriptor.get('container-image'):
-            metadata_descriptor['container-image-type'] = \
+            descriptor_properties['container-image-type'] = \
               [descriptor['container-image']['type']]
         if descriptor.get('tests'):
-            metadata_descriptor['has-tests'] = [True]
+            descriptor_properties['has-tests'] = [True]
         if descriptor.get('tags'):
             for tag in descriptor['tags'].keys():
-                metadata_descriptor[tag] = [descriptor['tags'][tag]]
-        add_metadata(descriptor_file, metadata_descriptor)
+                descriptor_properties[tag] = [descriptor['tags'][tag]]
+        g = dataset.repo.set_metadata(descriptor_file,
+                                      add=descriptor_properties)
+        list(g)  # seems to be required or the metadata is not added
 
         # Add input data files to dataset and update invocation accordingly
         # TODO: check if it works with file lists
@@ -167,8 +141,10 @@ def main(args=None):
                                                     execution_dir,
                                                     to_git=to_git_guess(
                                                       input_file))
-            add_metadata(file_path_in_dataset,
-                         {'conp-pipeline-role': ['input-file']})
+            g = dataset.repo.set_metadata(file_path_in_dataset,
+                                          init={'conp-pipeline-role':
+                                                'input-file'})
+            list(g)
             bosh_inputs[input_id] = file_path_in_dataset
             invocation[input_id] = file_path_in_dataset
 
@@ -178,8 +154,10 @@ def main(args=None):
             fhandle.write(json.dumps(invocation, indent=4, sort_keys=True))
         add_to_execution(invocation_file, execution_dir,
                          to_git=to_git_guess(invocation_file))
-        add_metadata(invocation_file, {'conp-pipeline-role':
-                                       ['invocation-description']})
+        g = dataset.repo.set_metadata(invocation_file,
+                                      init={'conp-pipeline-role':
+                                            'invocation-description'})
+        list(g)
 
         # Run the execution in Clowdr
         info("Executing invocation with Clowdr", verbose)
@@ -210,13 +188,15 @@ def main(args=None):
                     info("Found result file: {}".format(file_name), verbose)
                     shutil.move(file_name, dest_file)
                     Add.__call__(dest_file, to_git=to_git_guess(dest_file))
-                    add_metadata(dest_file,
-                                 {'conp-pipeline-role': ['result-file']})
+                    g = dataset.repo.set_metadata(dest_file,
+                                                  init={'conp-pipeline-role':
+                                                        'result-file'})
+                    list(g)
         # Cleanup Clowdr dir
         shutil.rmtree(op.dirname(task_dir))
 
         # Aggregate DataLad metadata
-        aggregate_metadata(dataset_path)
+        AggregateMetaData.__call__(dataset=dataset)
 
         info("Done!", verbose)
 # Add metadadta to descriptor so that others can find it (how?)
