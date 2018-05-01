@@ -23,7 +23,6 @@ class TestImport(TestCase):
                    " grep {}".format(key, file_name))
         self.run_command_test(command)
 
-
     def test_conp_pipeline(self):
         # Test dataset creation with DataLad
         command = "chmod 777 test_dataset/.git -R"
