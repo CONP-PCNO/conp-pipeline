@@ -42,6 +42,6 @@ class TestImport(TestCase):
                                        'sub-01_T1w_brain.nii.gz'))
 
         # Test that some metadata was added
-        search('boutiques', 'fsl_bet')
-        search('result-file', 'sub-01_T1w_brain.nii.gz')
-        search('invocation', 'invocation.json')
+        self.search('boutiques', 'fsl_bet')
+        self.search('result-file', 'sub-01_T1w_brain.nii.gz')
+        self.search('invocation', 'invocation.json')
