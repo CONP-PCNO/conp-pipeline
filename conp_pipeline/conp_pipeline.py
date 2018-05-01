@@ -6,6 +6,7 @@ import os
 import os.path as op
 import shutil
 import json
+import subprocess
 from tempfile import mkdtemp
 from boutiques import evaluate as bosh_evaluate
 from boutiques import validate as bosh_validate
@@ -42,7 +43,45 @@ def add_to_execution(file_name, execution_dir, to_git):
 
 
 def to_git_guess(file_name):
-    return file_name.endswith('.json') or file_name.endswith('.txt')
+    # return file_name.endswith('.json') or file_name.endswith('.txt')
+    # Looks like a file must be in the annex to have metadata
+    return False
+
+
+def add_metadata(file_name, key, value):
+    pwd = os.getcwd()
+    os.chdir(op.dirname(file_name))
+    command = "git annex metadata --set '{}'='{}' '{}'".format(key,
+                                                               value,
+                                                               file_name)
+    process = subprocess.Popen(command,
+                               shell=True,
+                               stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE)
+    code = process.wait()
+    stdout = process.stdout.read().decode("utf-8")
+    stderr = process.stderr.read().decode("utf-8")
+    os.chdir(pwd)
+    if code:
+        raise CONPPipelineError("Cannot add metadata ({} {}) to file"
+                                " {}: {}\n {}".format(key, value,
+                                                      file_name, stdout,
+                                                      stderr))
+
+
+def aggregate_metadata(dataset_path):
+    # We should probably do this through the Python API
+    command = "datalad aggregate-metadata -d {}".format(dataset_path)
+    process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE)
+    code = process.wait()
+    stdout = process.stdout.read().decode("utf-8")
+    stderr = process.stderr.read().decode("utf-8")
+    if code:
+        raise CONPPipelineError("Cannot add metadata ({} {}) to file"
+                                " {}: {}\n {}".format(key, value,
+                                                      file_name, stdout,
+                                                      stderr))
 
 
 def main(args=None):
@@ -92,7 +131,26 @@ def main(args=None):
         # Add descriptor to execution dir
         descriptor_file = add_to_execution(descriptor_file,
                                            execution_dir,
-                                           to_git=True)
+                                           to_git=to_git_guess(descriptor_file))
+
+        # Add metadata do descriptor
+        descriptor = json.loads(open(descriptor_file).read())
+
+        add_metadata(descriptor_file, 'conp-pipeline-role',
+                                      'pipeline-description')
+        add_metadata(descriptor_file, 'pipeline-format', 'boutiques')
+        for field in ['name', 'description', 'tool-version', 'author',
+                      'url', 'doi', 'tool-doi']:
+            if descriptor.get(field):
+                add_metadata(descriptor_file, field, descriptor[field])
+        if descriptor.get('container-image'):
+            add_metadata(descriptor_file, 'container-image-type',
+                         descriptor['container-image']['type'])
+        if descriptor.get('tests'):
+            add_metadatda(descriptor_file, 'has-tests', 'true')
+        if descriptor.get('tags'):
+            for tag in descriptor['tags'].keys():
+                add_metadata(descriptor_file, tag, descriptor['tags'][tag])
 
         # Add input data files to dataset and update invocation accordingly
         # TODO: check if it works with file lists
@@ -113,7 +171,10 @@ def main(args=None):
             # Add file to the dataset and update invocation accordingly
             file_path_in_dataset = add_to_execution(input_file,
                                                     execution_dir,
-                                                    to_git=False)
+                                                    to_git=to_git_guess(
+                                                      input_file))
+            add_metadata(file_path_in_dataset, 'conp-pipeline-role',
+                                               'input-file')
             bosh_inputs[input_id] = file_path_in_dataset
             invocation[input_id] = file_path_in_dataset
 
@@ -121,6 +182,10 @@ def main(args=None):
         invocation_file = op.join(execution_dir, op.basename(invocation_file))
         with open(invocation_file, 'w') as fhandle:
             fhandle.write(json.dumps(invocation, indent=4, sort_keys=True))
+        add_to_execution(invocation_file, execution_dir,
+                         to_git=to_git_guess(invocation_file))
+        add_metadata(invocation_file, 'conp-pipeline-role',
+                                      'invocation-description')
 
         # Run the execution in Clowdr
         info("Executing invocation with Clowdr", verbose)
@@ -144,13 +209,19 @@ def main(args=None):
         for file_name in os.listdir(task_dir):
             file_name = op.join(task_dir, file_name)
             if ((not op.basename(file_name).startswith("clowtask")) and
+                (not op.basename(file_name).startswith("MD5E-")) and
                (file_name not in ignored_files)):
                     dest_file = op.abspath(op.join(execution_dir,
                                            op.basename(file_name)))
+                    info("Found result file: {}".format(file_name), verbose)
                     shutil.move(file_name, dest_file)
                     Add.__call__(dest_file, to_git=to_git_guess(dest_file))
+                    add_metadata(dest_file, 'conp-pipeline-role', 'result-file')
         # Cleanup Clowdr dir
         shutil.rmtree(op.dirname(task_dir))
+
+        # Aggregate DataLad metadata
+        aggregate_metadata(dataset_path)
 
         info("Done!", verbose)
 # Add metadadta to descriptor so that others can find it (how?)
