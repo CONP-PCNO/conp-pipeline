@@ -2,7 +2,7 @@ import sys
 from setuptools import setup
 import sys
 
-VERSION = "0.1.2"
+VERSION = "0.2"
 DEPS = ["clowdr"]
 
 setup(name="conp-pipeline",
