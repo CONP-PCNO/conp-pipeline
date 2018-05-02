@@ -6,8 +6,6 @@ import os
 import os.path as op
 import shutil
 import json
-import subprocess
-from datalad.utils import chpwd
 from tempfile import mkdtemp
 from boutiques import evaluate as bosh_evaluate
 from boutiques import validate as bosh_validate
