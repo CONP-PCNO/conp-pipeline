@@ -12,6 +12,7 @@ from boutiques import validate as bosh_validate
 from boutiques import invocation as bosh_invocation
 from datalad.distribution.dataset import Dataset
 from datalad.distribution.add import Add
+from datalad.metadata.aggregate import AggregateMetaData
 
 
 class CONPPipelineError(Exception):
@@ -42,7 +43,9 @@ def add_to_execution(file_name, execution_dir, to_git):
 
 
 def to_git_guess(file_name):
-    return file_name.endswith('.json') or file_name.endswith('.txt')
+    # return file_name.endswith('.json') or file_name.endswith('.txt')
+    # Looks like a file must be in the annex to have metadata
+    return False
 
 
 def main(args=None):
@@ -92,7 +95,28 @@ def main(args=None):
         # Add descriptor to execution dir
         descriptor_file = add_to_execution(descriptor_file,
                                            execution_dir,
-                                           to_git=True)
+                                           to_git=to_git_guess(descriptor_file))
+
+        # Add metadata to descriptor
+        descriptor = json.loads(open(descriptor_file).read())
+        descriptor_properties = {}
+        descriptor_properties['conp-pipeline-role'] = ['pipeline-description']
+        descriptor_properties['pipeline-format'] = ['boutiques']
+        for field in ['name', 'description', 'tool-version', 'author',
+                      'url', 'doi', 'tool-doi']:
+            if descriptor.get(field):
+                descriptor_properties[field] = [descriptor[field]]
+        if descriptor.get('container-image'):
+            descriptor_properties['container-image-type'] = \
+              [descriptor['container-image']['type']]
+        if descriptor.get('tests'):
+            descriptor_properties['has-tests'] = [True]
+        if descriptor.get('tags'):
+            for tag in descriptor['tags'].keys():
+                descriptor_properties[tag] = [descriptor['tags'][tag]]
+        g = dataset.repo.set_metadata(descriptor_file,
+                                      add=descriptor_properties)
+        list(g)  # seems to be required or the metadata is not added
 
         # Add input data files to dataset and update invocation accordingly
         # TODO: check if it works with file lists
@@ -113,7 +137,12 @@ def main(args=None):
             # Add file to the dataset and update invocation accordingly
             file_path_in_dataset = add_to_execution(input_file,
                                                     execution_dir,
-                                                    to_git=False)
+                                                    to_git=to_git_guess(
+                                                      input_file))
+            g = dataset.repo.set_metadata(file_path_in_dataset,
+                                          init={'conp-pipeline-role':
+                                                'input-file'})
+            list(g)
             bosh_inputs[input_id] = file_path_in_dataset
             invocation[input_id] = file_path_in_dataset
 
@@ -121,6 +150,12 @@ def main(args=None):
         invocation_file = op.join(execution_dir, op.basename(invocation_file))
         with open(invocation_file, 'w') as fhandle:
             fhandle.write(json.dumps(invocation, indent=4, sort_keys=True))
+        add_to_execution(invocation_file, execution_dir,
+                         to_git=to_git_guess(invocation_file))
+        g = dataset.repo.set_metadata(invocation_file,
+                                      init={'conp-pipeline-role':
+                                            'invocation-description'})
+        list(g)
 
         # Run the execution in Clowdr
         info("Executing invocation with Clowdr", verbose)
@@ -144,13 +179,22 @@ def main(args=None):
         for file_name in os.listdir(task_dir):
             file_name = op.join(task_dir, file_name)
             if ((not op.basename(file_name).startswith("clowtask")) and
+                (not op.basename(file_name).startswith("MD5E-")) and
                (file_name not in ignored_files)):
                     dest_file = op.abspath(op.join(execution_dir,
                                            op.basename(file_name)))
+                    info("Found result file: {}".format(file_name), verbose)
                     shutil.move(file_name, dest_file)
                     Add.__call__(dest_file, to_git=to_git_guess(dest_file))
+                    g = dataset.repo.set_metadata(dest_file,
+                                                  init={'conp-pipeline-role':
+                                                        'result-file'})
+                    list(g)
         # Cleanup Clowdr dir
         shutil.rmtree(op.dirname(task_dir))
+
+        # Aggregate DataLad metadata
+        AggregateMetaData.__call__(dataset=dataset)
 
         info("Done!", verbose)
 # Add metadadta to descriptor so that others can find it (how?)
